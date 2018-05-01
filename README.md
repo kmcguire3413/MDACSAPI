@@ -1,0 +1,1 @@
+Much logic is reused across different services in the MDACS ecosystem. Each reuse, if re-implemented, costs time, avoids the benefits of best practice, and leads to reduced productivity. This project provides the API for the major services.
