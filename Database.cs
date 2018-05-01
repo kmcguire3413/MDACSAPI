@@ -347,12 +347,15 @@ namespace MDACS.API
 
             var payload = JsonConvert.SerializeObject(header);
 
+            Console.WriteLine("Waiting for auth...");
             var packet = await API.Auth.BuildAuthWithPayloadAsync(
                 auth_url,
                 username,
                 password,
                 payload
             );
+            Console.WriteLine("Got auth...");
+
             var packet_bytes = Encoding.UTF8.GetBytes($"{packet}\n");
 
             var wr = WebRequest.Create($"{db_url}/upload");
@@ -360,28 +363,130 @@ namespace MDACS.API
             wr.ContentType = "text/json";
             wr.Method = "POST";
 
+            // Workaround, TODO, BUG: The server is not likely correctly doing something which causes
+            //                        the connection to hang since the subsystem appears to be reusing
+            //                        the sockets (which is appropriate and good) yet without forcing
+            //                        a new connection this will cause hangs/failures in the code below.
+            wr.ConnectionGroupName = DateTime.Now.ToString();
+
             ((HttpWebRequest)wr).AllowWriteStreamBuffering = false;
             ((HttpWebRequest)wr).SendChunked = true;
             // When sending a very long post this might need to be turned off
             // since it can cause an abrupt canceling of the request.
             ((HttpWebRequest)wr).KeepAlive = false;
 
-            var reqstream = await wr.GetRequestStreamAsync();
+            wr.Timeout = 1000 * 30;
 
-            await reqstream.WriteAsync(packet_bytes, 0, packet_bytes.Length);
+            var reqstreamTask = wr.GetRequestStreamAsync();
 
-            await data.CopyToAsync(reqstream);
+            if (await Task.WhenAny(reqstreamTask, Task.Delay(1000 * 12)) != reqstreamTask)
+            {
+                return new Responses.UploadResponse()
+                {
+                    success = false,
+                    fqpath = null,
+                    security_id = null,
+                };
+            }
+
+            var reqstream = reqstreamTask.Result;
+
+            var firstWriteTask = reqstream.WriteAsync(packet_bytes, 0, packet_bytes.Length);
+
+            if (await Task.WhenAny(firstWriteTask, Task.Delay(1000 * 12)) != firstWriteTask)
+            {
+                return new Responses.UploadResponse()
+                {
+                    success = false,
+                    fqpath = null,
+                    security_id = null,
+                };
+            }
+
+            Console.WriteLine("First write done.");
+
+            int sent = 0;
+
+            byte[] buf = new byte[1024 * 32];
+
+            while (sent < data.Length)
+            {
+                var amtTask = data.ReadAsync(buf, 0, buf.Length);
+
+                if (await Task.WhenAny(amtTask, Task.Delay(1000 * 12)) != amtTask)
+                {
+                    return new Responses.UploadResponse()
+                    {
+                        success = false,
+                        fqpath = null,
+                        security_id = null,
+                    };
+                }
+
+                var amt = amtTask.Result;
+
+                // Is it possible for amt to be zero and that create an infinite loop here?
+                // This checks for that condition since the documentation says zero means that
+                // the end of the stream has been reached.
+
+                if (amt < 1)
+                {
+                    break;
+                }
+
+                var writeTask = reqstream.WriteAsync(buf, 0, amt);
+
+                if (await Task.WhenAny(writeTask, Task.Delay(1000 * 12)) != writeTask)
+                {
+                    return new Responses.UploadResponse()
+                    {
+                        success = false,
+                        fqpath = null,
+                        security_id = null,
+                    };
+                }
+
+                sent += amt;
+            }
+
+            Console.WriteLine("All writes done.");
 
             reqstream.Close();
 
             var chunk = new byte[1024];
 
-            var resp = await wr.GetResponseAsync();
-            var rstream = resp.GetResponseStream();
-            var resp_length = await rstream.ReadAsync(chunk, 0, chunk.Length);
-            var resp_text = Encoding.UTF8.GetString(chunk, 0, resp_length);
+            Console.WriteLine("Reading the response.");
 
-            return JsonConvert.DeserializeObject<Responses.UploadResponse>(resp_text);
+            var respTask = wr.GetResponseAsync();
+
+            if (await Task.WhenAny(respTask, Task.Delay(1000 * 60 * 5)) != respTask)
+            {
+                return new Responses.UploadResponse()
+                {
+                    success = false,
+                    fqpath = null,
+                    security_id = null,
+                };
+            }
+
+            var rstream = respTask.Result.GetResponseStream();
+            var respBytesTask = rstream.ReadAsync(chunk, 0, chunk.Length);
+
+            if (await Task.WhenAny(respBytesTask, Task.Delay(1000 * 60 * 5)) != respBytesTask)
+            {
+                return new Responses.UploadResponse()
+                {
+                    success = false,
+                    fqpath = null,
+                    security_id = null,
+                };
+            }
+
+            var respLength = respBytesTask.Result;
+
+            var respText = Encoding.UTF8.GetString(chunk, 0, respLength);
+
+            return JsonConvert.DeserializeObject<Responses.UploadResponse>(respText);
         }
 
         public static async Task<Responses.UploadResponse> UploadAsync(
