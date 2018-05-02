@@ -411,10 +411,12 @@ namespace MDACS.API
 
             while (sent < data.Length)
             {
+                //Console.WriteLine("Read");
                 var amtTask = data.ReadAsync(buf, 0, buf.Length);
 
                 if (await Task.WhenAny(amtTask, Task.Delay(1000 * 12)) != amtTask)
                 {
+                    //Console.WriteLine("ReadTimeout");
                     return new Responses.UploadResponse()
                     {
                         success = false,
@@ -422,6 +424,8 @@ namespace MDACS.API
                         security_id = null,
                     };
                 }
+
+                //Console.WriteLine("ReadDone");
 
                 var amt = amtTask.Result;
 
@@ -434,10 +438,13 @@ namespace MDACS.API
                     break;
                 }
 
+                //Console.WriteLine("Write");
+
                 var writeTask = reqstream.WriteAsync(buf, 0, amt);
 
                 if (await Task.WhenAny(writeTask, Task.Delay(1000 * 12)) != writeTask)
                 {
+                    //Console.WriteLine("WriteTimeout");
                     return new Responses.UploadResponse()
                     {
                         success = false,
@@ -445,6 +452,8 @@ namespace MDACS.API
                         security_id = null,
                     };
                 }
+
+                //Console.WriteLine("WriteDone");
 
                 sent += amt;
             }
