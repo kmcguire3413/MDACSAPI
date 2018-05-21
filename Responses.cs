@@ -4,6 +4,10 @@ using System.Text;
 
 namespace MDACS.API.Responses
 {
+    class SuccessBooleanResponse {
+        public bool success;
+    }
+
     /// <summary>
     /// Each command to be executed has an associated user that provided
     /// the command. A client has to authenticate to provide commands and
@@ -28,7 +32,7 @@ namespace MDACS.API.Responses
         public CommandWaitResponseEntry[] commands;
     }
 
-    class CommandResponseTakeResponse {
+    class CommandResponseReadResponse {
         public Dictionary<string, string> responses;
     }
     

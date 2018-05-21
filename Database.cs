@@ -1,7 +1,9 @@
 ﻿using MDACS.API.Requests;
 using MDACS.API.Responses;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,127 +15,6 @@ namespace MDACS.API
 {
     public class Database
     {
-        private static async Task<Stream> ReadStreamTransactionAsync(
-            string auth_url,
-            string db_url,
-            string username,
-            string password,
-            string payload
-        )
-        {
-            WebRequest req;
-
-            byte[] payload_bytes;
-
-            if (auth_url != null)
-            {
-                payload_bytes = Encoding.UTF8.GetBytes(
-                    await Auth.BuildAuthWithPayloadAsync(auth_url, username, password, payload)
-                );
-            }
-            else
-            {
-                payload_bytes = Encoding.UTF8.GetBytes(payload);
-            }
-
-            req = WebRequest.Create(db_url);
-            req.Method = "POST";
-            req.ContentType = "text/json";
-
-            var data = await req.GetRequestStreamAsync();
-            await data.WriteAsync(payload_bytes, 0, payload_bytes.Length);
-            data.Close();
-
-            var resp = await req.GetResponseAsync();
-
-            var data_out = resp.GetResponseStream();
-
-            return data_out;
-        }
-
-        private static Stream ReadStreamTransaction(
-            string auth_url,
-            string db_url,
-            string username,
-            string password,
-            string payload
-        )
-        {
-            WebRequest req;
-            WebResponse resp;
-            Stream data;
-
-            byte[] payload_bytes;
-
-            if (auth_url != null)
-            {
-                var tsk = Auth.BuildAuthWithPayloadAsync(auth_url, username, password, payload);
-
-                tsk.Wait();
-
-                payload_bytes = Encoding.UTF8.GetBytes(
-                    tsk.Result
-                );
-            } else
-            {
-                payload_bytes = Encoding.UTF8.GetBytes(payload);
-            }
-
-            req = WebRequest.Create(db_url);
-
-            req.Method = "POST";
-            req.ContentType = "text/json";
-
-            data = req.GetRequestStream();
-            data.Write(payload_bytes, 0, payload_bytes.Length);
-            data.Close();
-
-            resp = req.GetResponse();
-
-            data = resp.GetResponseStream();
-
-            return data;
-        }
-
-        private static string StringTransaction(
-            string auth_url,
-            string db_url,
-            string username,
-            string password,
-            string payload
-        )
-        {
-            WebRequest req;
-            WebResponse resp;
-            Stream data;
-            StreamReader reader;
-
-            var tsk = Auth.BuildAuthWithPayloadAsync(auth_url, username, password, payload);
-
-            tsk.Wait();
-
-            var payload_bytes = Encoding.ASCII.GetBytes(
-                tsk.Result
-            );
-
-            req = WebRequest.Create(db_url);
-
-            req.Method = "POST";
-            req.ContentType = "text/json";
-
-            data = req.GetRequestStream();
-            data.Write(payload_bytes, 0, payload_bytes.Length);
-            data.Close();
-
-            resp = req.GetResponse();
-
-            data = resp.GetResponseStream();
-
-            reader = new StreamReader(data);
-
-            return reader.ReadToEnd();
-        }
-
         public class Alert
         {
 
@@ -178,18 +59,7 @@ namespace MDACS.API
 
         public static async Task<Stream> DownloadDataAsync(string security_id, string auth_url, string db_url, string username, string password)
         {
-            return await ReadStreamTransactionAsync(
-                auth_url,
-                string.Format("{0}/download?{1}", db_url, security_id),
-                username,
-                password,
-                "{}"
-            );
-        }
-
-        public static Stream DownloadData(string security_id, string auth_url, string db_url, string username, string password)
-        {
-            return ReadStreamTransaction(
+            return await Generic.ReadStreamTransactionAsync(
                 auth_url,
                 string.Format("{0}/download?{1}", db_url, security_id),
                 username,
@@ -210,7 +80,7 @@ namespace MDACS.API
                 ops = ops
             };
 
-            var stream = await ReadStreamTransactionAsync(
+            var stream = await Generic.ReadStreamTransactionAsync(
                 auth_url,
                 $"{db_url}/commit_batch_single_ops",
                 username,
@@ -239,7 +109,7 @@ namespace MDACS.API
                 userid = userid,
             };
 
-            var stream = await ReadStreamTransactionAsync(
+            var stream = await Generic.ReadStreamTransactionAsync(
                 auth_url,
                 $"{db_url}/commit-configuration",
                 username,
@@ -260,7 +130,7 @@ namespace MDACS.API
             string deviceid,
             string current_config_data)
         {
-            var stream = await ReadStreamTransactionAsync(
+            var stream = await Generic.ReadStreamTransactionAsync(
                 null,
                 $"{db_url}/device-config",
                 username,
@@ -283,7 +153,7 @@ namespace MDACS.API
             string username,
             string password)
         {
-            var stream = await ReadStreamTransactionAsync(
+            var stream = await Generic.ReadStreamTransactionAsync(
                 auth_url,
                 $"{db_url}/enumerate-configurations",
                 username,
@@ -309,7 +179,7 @@ namespace MDACS.API
             csreq.security_id = sid;
             csreq.meta = meta;
 
-            var stream = await ReadStreamTransactionAsync(
+            var stream = await Generic.ReadStreamTransactionAsync(
                 auth_url,
                 $"{db_url}/commitset",
                 username,
@@ -569,7 +439,7 @@ namespace MDACS.API
         {
             string payload = "{}";
 
-            var stream = await ReadStreamTransactionAsync(
+            var stream = await Generic.ReadStreamTransactionAsync(
                 auth_url,
                 string.Format("{0}/data", db_url),
                 username,
@@ -607,7 +477,7 @@ namespace MDACS.API
                 sid = sid,
             });
 
-            var stream = await ReadStreamTransactionAsync(
+            var stream = await Generic.ReadStreamTransactionAsync(
                 auth_url,
                 string.Format("{0}/delete", db_url),
                 username,
@@ -616,41 +486,6 @@ namespace MDACS.API
             );
 
             return JsonConvert.DeserializeObject<DeleteResponse>(new StreamReader(stream).ReadToEnd()).success;
-        }
-
-        public static Responses.DataResponse GetData(string auth_url, string db_url, string username, string password, GetDataProgress progress_event)
-        {
-            string payload = "{}";
-
-            var stream = ReadStreamTransaction(
-                auth_url,
-                string.Format("{0}/data", db_url),
-                username,
-                password,
-                payload
-            );
-
-            MemoryStream ms = new MemoryStream(1024 * 1024 * 5);
-
-            int count = 0;
-            byte[] buf = new byte[1024 * 32];
-            ulong amount_read = 0;
-
-            while ((count = stream.Read(buf, 0, buf.Length)) > 0)
-            {
-                ms.Write(buf, 0, count);
-                amount_read += (ulong)count;
-                if (progress_event != null)
-                {
-                    progress_event?.Invoke(amount_read);
-                }
-            }
-
-            string resp_json = Encoding.UTF8.GetString(ms.ToArray());
-
-            //string resp_json = File.ReadAllText("dump.txt");
-
-            return JsonConvert.DeserializeObject<Responses.DataResponse>(resp_json);
         }
     }
 }

@@ -29,13 +29,13 @@ namespace MDACS.API.Requests
         public int timeout;
     }
 
-    class CommandResponseTakeRequest {
+    class CommandResponseReadRequest {
         /// <summary>
         /// The list of identifiers representing each command to receive the response for.
         /// </summary>
         public string[] commandIds;
     }
-    
+
     /// <summary>
     /// Request to provide results for executed commands.
     /// </summary>
