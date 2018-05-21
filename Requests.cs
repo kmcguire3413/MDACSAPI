@@ -5,12 +5,12 @@ using System.Text;
 
 namespace MDACS.API.Requests
 {
-    class CommandExecuteRequest {
+    public class CommandExecuteRequest {
         public string command;
         public string serviceId;
     }
 
-    class CommandWaitRequest {
+    public class CommandWaitRequest {
         /// <summary>
         /// The service identifier represents the service waiting using a human readable
         /// descriptive string. The string should have no whitespace so that it is not
@@ -29,7 +29,7 @@ namespace MDACS.API.Requests
         public int timeout;
     }
 
-    class CommandResponseReadRequest {
+    public class CommandResponseReadRequest {
         /// <summary>
         /// The list of identifiers representing each command to receive the response for.
         /// </summary>
@@ -39,7 +39,7 @@ namespace MDACS.API.Requests
     /// <summary>
     /// Request to provide results for executed commands.
     /// </summary>
-    class CommandResponseWriteRequest {
+    public class CommandResponseWriteRequest {
         public string serviceId;
         public string serviceGuid;
         /// <summary>

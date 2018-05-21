@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MDACS.API.Responses
 {
-    class SuccessBooleanResponse {
+    public class SuccessBooleanResponse {
         public bool success;
     }
 
@@ -13,7 +13,7 @@ namespace MDACS.API.Responses
     /// the command. A client has to authenticate to provide commands and
     /// attaching the user information to each command is cheap and useful.
     /// </summary>
-    class CommandWaitResponseEntry {
+    public class CommandWaitResponseEntry {
         public string command;
         public Auth.User user;
         /// <summary>
@@ -27,12 +27,12 @@ namespace MDACS.API.Responses
     /// Each proper response provides zero or more commands that needs to
     /// be executed and have responses returned.
     /// </summary>
-    class CommandWaitResponse {
+    public class CommandWaitResponse {
         public bool success;
         public CommandWaitResponseEntry[] commands;
     }
 
-    class CommandResponseReadResponse {
+    public class CommandResponseReadResponse {
         public Dictionary<string, string> responses;
     }
     

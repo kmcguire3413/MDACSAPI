@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace MDACS.API
 {
     public class Command {
-        private static async Task<bool> ExecuteCommandAsync(
+        public static async Task<bool> ExecuteCommandAsync(
             string authUrl,
             string cmdUrl, 
             string serviceId,
@@ -30,7 +30,7 @@ namespace MDACS.API
             return response.success;
         }
 
-        private static async Task<Responses.CommandWaitResponse> FetchCommands(
+        public static async Task<Responses.CommandWaitResponse> FetchCommandsAsync(
             string authUrl,
             string cmdUrl,
             string serviceId,
@@ -48,7 +48,7 @@ namespace MDACS.API
             return await Generic.ReadTypeTransactionAsync<Responses.CommandWaitResponse>(authUrl, cmdUrl, username, password, payload);
         }
 
-        private static async Task<bool> WriteResponses(
+        public static async Task<bool> WriteResponsesAsync(
             string authUrl,
             string cmdUrl, 
             string serviceId, 
@@ -68,7 +68,7 @@ namespace MDACS.API
             return response.success;
         }
 
-        private static async Task<Responses.CommandResponseReadResponse> ReadResponses(
+        public static async Task<Responses.CommandResponseReadResponse> ReadResponsesAsync(
             string authUrl,
             string cmdUrl,
             string serviceId,

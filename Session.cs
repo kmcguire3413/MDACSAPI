@@ -33,6 +33,52 @@ namespace MDACS.API
             this.password = password;
         }
 
+        public async Task<bool> ExecuteCommandAsync(
+            string authUrl,
+            string cmdUrl, 
+            string serviceId,
+            string command, 
+            string username, 
+            string password) 
+        {
+            return await Command.ExecuteCommandAsync(authUrl, cmdUrl, serviceId, command, username, password);
+        }
+
+        public async Task<Responses.CommandWaitResponse> FetchCommandsAsync(
+            string authUrl,
+            string cmdUrl,
+            string serviceId,
+            string serviceGuid,
+            int timeout,
+            string username,
+            string password) 
+        {
+            return await Command.FetchCommandsAsync(authUrl, cmdUrl, serviceId, serviceGuid, timeout, username, password);
+        }
+
+        public async Task<bool> WriteResponsesAsync(
+            string authUrl,
+            string cmdUrl, 
+            string serviceId, 
+            string serviceGuid, 
+            string username, 
+            string password,
+            Dictionary<string, string> responses) 
+        {
+            return await Command.WriteResponsesAsync(authUrl, cmdUrl, serviceId, serviceGuid, username, password, responses);
+        }
+
+        public async Task<Responses.CommandResponseReadResponse> ReadResponsesAsync(
+            string authUrl,
+            string cmdUrl,
+            string serviceId,
+            string username,
+            string password,
+            string[] commandIds) 
+        {
+            return await Command.ReadResponsesAsync(authUrl, cmdUrl, serviceId, username, password, commandIds);
+        }        
+
         public async Task<CommitSetResponse> CommitSetAsync(string sid, JObject meta)
         {
             return await Database.CommitSetAsync(
