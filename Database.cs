@@ -37,7 +37,6 @@ namespace MDACS.API
             }
 
             req = WebRequest.Create(db_url);
-
             req.Method = "POST";
             req.ContentType = "text/json";
 
@@ -164,6 +163,7 @@ namespace MDACS.API
             public string uploaded_by_user;
             public string data_hash_sha512;
             public string manager_uuid;
+            public List<string[]> sources;
 
             public static string Serialize(Item item)
             {
@@ -504,7 +504,7 @@ namespace MDACS.API
             return JsonConvert.DeserializeObject<DeleteResponse>(new StreamReader(stream).ReadToEnd()).success;
         }
 
-            public static Responses.DataResponse GetData(string auth_url, string db_url, string username, string password, GetDataProgress progress_event)
+        public static Responses.DataResponse GetData(string auth_url, string db_url, string username, string password, GetDataProgress progress_event)
         {
             string payload = "{}";
 

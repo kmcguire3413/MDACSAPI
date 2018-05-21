@@ -4,6 +4,34 @@ using System.Text;
 
 namespace MDACS.API.Responses
 {
+    /// <summary>
+    /// Each command to be executed has an associated user that provided
+    /// the command. A client has to authenticate to provide commands and
+    /// attaching the user information to each command is cheap and useful.
+    /// </summary>
+    class CommandWaitResponseEntry {
+        public string command;
+        public Auth.User user;
+        /// <summary>
+        /// The id for each command is unique and internal to the command service. The
+        /// id is used to associate command responses with commands.
+        /// </summary>
+        public string id;
+    }
+    
+    /// <summary>
+    /// Each proper response provides zero or more commands that needs to
+    /// be executed and have responses returned.
+    /// </summary>
+    class CommandWaitResponse {
+        public bool success;
+        public CommandWaitResponseEntry[] commands;
+    }
+
+    class CommandResponseTakeResponse {
+        public Dictionary<string, string> responses;
+    }
+    
     public class DeleteResponse
     {
         public bool success;

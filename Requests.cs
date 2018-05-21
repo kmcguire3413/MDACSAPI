@@ -5,6 +5,49 @@ using System.Text;
 
 namespace MDACS.API.Requests
 {
+    class CommandExecuteRequest {
+        public string command;
+        public string serviceId;
+    }
+
+    class CommandWaitRequest {
+        /// <summary>
+        /// The service identifier represents the service waiting using a human readable
+        /// descriptive string. The string should have no whitespace so that it is not
+        /// ambigious with the command string that it may be used within.
+        /// </summary>
+        public string serviceId;
+        /// <summary>
+        /// An identifier that should be globally unique. It helps to create consistent
+        /// suffixes for conflicting service identifiers.
+        /// </summary>
+        public string serviceGuid;
+        /// <summary>
+        /// The maximum time to wait in milliseconds for the request before returning a
+        /// non-success code.
+        /// </summary>
+        public int timeout;
+    }
+
+    class CommandResponseTakeRequest {
+        /// <summary>
+        /// The list of identifiers representing each command to receive the response for.
+        /// </summary>
+        public string[] commandIds;
+    }
+    
+    /// <summary>
+    /// Request to provide results for executed commands.
+    /// </summary>
+    class CommandResponseWriteRequest {
+        public string serviceId;
+        public string serviceGuid;
+        /// <summary>
+        /// Provide results using command GUID as the key and the result data as the value.
+        /// </summary>
+        public Dictionary<string, string> responses;
+    }    
+
     public class DeleteRequest
     {
         public String sid;
